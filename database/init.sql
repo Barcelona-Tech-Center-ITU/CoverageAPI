@@ -35,8 +35,10 @@ CREATE TABLE IF NOT EXISTS coverage_measurements (
     app_version VARCHAR(100),
     library_version VARCHAR(100),
     
-    -- Performance data
+    -- Performance data of the cellular network
+    data_network_type VARCHAR(50),
     download_speed_kbps DOUBLE PRECISION,
+    upload_speed_kbps DOUBLE PRECISION,
     
     -- Foreign key constraint
     CONSTRAINT fk_api_key FOREIGN KEY (api_key) REFERENCES api_keys(api_key) ON DELETE CASCADE
@@ -52,59 +54,3 @@ CREATE INDEX IF NOT EXISTS idx_coverage_location ON coverage_measurements(latitu
 CREATE INDEX IF NOT EXISTS idx_coverage_network_type ON coverage_measurements(network_type);
 CREATE INDEX IF NOT EXISTS idx_coverage_mcc_mnc ON coverage_measurements(mcc, mnc);
 CREATE INDEX IF NOT EXISTS idx_coverage_api_key ON coverage_measurements(api_key);
-
--- Create a view for basic statistics
-CREATE OR REPLACE VIEW coverage_stats AS
-SELECT 
-    COUNT(*) as total_measurements,
-    COUNT(DISTINCT phone_identifier) as unique_devices,
-    COUNT(DISTINCT network_type) as network_types,
-    AVG(signal_strength_dbm) as avg_signal_dbm,
-    AVG(download_speed_kbps) as avg_download_speed_kbps,
-    MIN(timestamp) as first_measurement,
-    MAX(timestamp) as last_measurement
-FROM coverage_measurements;
-
--- Create a view for network type distribution
-CREATE OR REPLACE VIEW network_type_distribution AS
-SELECT 
-    network_type,
-    COUNT(*) as measurement_count,
-    COUNT(DISTINCT phone_identifier) as unique_devices,
-    AVG(signal_strength_dbm) as avg_signal_dbm,
-    AVG(download_speed_kbps) as avg_download_speed_kbps
-FROM coverage_measurements 
-WHERE network_type IS NOT NULL
-GROUP BY network_type
-ORDER BY measurement_count DESC;
-
--- Create a view for geographic distribution
-CREATE OR REPLACE VIEW geographic_distribution AS
-SELECT 
-    ROUND(latitude::numeric, 2) as lat_rounded,
-    ROUND(longitude::numeric, 2) as lng_rounded,
-    COUNT(*) as measurement_count,
-    COUNT(DISTINCT phone_identifier) as unique_devices,
-    AVG(signal_strength_dbm) as avg_signal_dbm
-FROM coverage_measurements 
-WHERE latitude IS NOT NULL AND longitude IS NOT NULL
-GROUP BY lat_rounded, lng_rounded
-ORDER BY measurement_count DESC;
-
--- Create a view for API key statistics
-CREATE OR REPLACE VIEW api_key_stats AS
-SELECT 
-    COUNT(*) as total_api_keys,
-    MIN(created_at) as first_key_created,
-    MAX(created_at) as last_key_created
-FROM api_keys;
-
--- Grant permissions to the coverage user
-GRANT ALL PRIVILEGES ON TABLE api_keys TO coverage;
-GRANT ALL PRIVILEGES ON SEQUENCE api_keys_id_seq TO coverage;
-GRANT ALL PRIVILEGES ON TABLE coverage_measurements TO coverage;
-GRANT ALL PRIVILEGES ON SEQUENCE coverage_measurements_id_seq TO coverage;
-GRANT SELECT ON coverage_stats TO coverage;
-GRANT SELECT ON network_type_distribution TO coverage;
-GRANT SELECT ON geographic_distribution TO coverage;
-GRANT SELECT ON api_key_stats TO coverage;
