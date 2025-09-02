@@ -33,6 +33,7 @@ class CoverageMeasurement(Base):
 
     # Network information
     network_type = Column(String)
+    data_network_type = Column(String)
     mcc = Column(Integer)  # Mobile Country Code
     mnc = Column(Integer)  # Mobile Network Code
     cell_id = Column(BigInteger)
