@@ -1,0 +1,49 @@
+services:
+  # Key service - lightweight
+  key-service:
+    build:
+      context: .
+      dockerfile: ./key-service/Dockerfile
+    environment:
+      - PYTHONUNBUFFERED=1
+      - DATABASE_URL=${DATABASE_URL}
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+        reservations:
+          memory: 128M
+    restart: unless-stopped
+
+  # Data service - medium resources
+  data-service:
+    build:
+      context: .
+      dockerfile: ./data-service/Dockerfile
+    environment:
+      - PYTHONUNBUFFERED=1
+      - DATABASE_URL=${DATABASE_URL}
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 512M
+    restart: unless-stopped
+
+  # Upload service - high resources
+  upload-service:
+    build:
+      context: .
+      dockerfile: ./upload-service/Dockerfile
+    environment:
+      - PYTHONUNBUFFERED=1
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: '1.0'
+        reservations:
+          memory: 1G
+          cpus: '0.5'
+    restart: unless-stopped
