@@ -42,6 +42,7 @@ services:
       dockerfile: ./upload-service/Dockerfile
     environment:
       - PYTHONUNBUFFERED=1
+      - DATABASE_URL=${DATABASE_URL}
     networks:
       - dokploy-network
     deploy:

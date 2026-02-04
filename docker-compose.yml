@@ -68,6 +68,7 @@ services:
       dockerfile: ./upload-service/Dockerfile
     environment:
       - PYTHONUNBUFFERED=1
+      - DATABASE_URL=postgresql://coverage:coverage@postgres:5432/coverage_db
     deploy:
       resources:
         limits:
@@ -77,6 +78,8 @@ services:
           memory: 1G
           cpus: '0.5'
     restart: unless-stopped
+    depends_on:
+      - postgres
 
 volumes:
   postgres_data:
