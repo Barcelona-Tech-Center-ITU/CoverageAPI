@@ -1,4 +1,19 @@
 services:
+# Nginx reverse proxy
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+    networks:
+      - dokploy-network
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - key-service
+      - data-service
+      - upload-service
+    restart: unless-stopped
+
   # Key service - lightweight
   key-service:
     build:
