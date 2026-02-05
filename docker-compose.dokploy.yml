@@ -2,8 +2,6 @@ services:
 # Nginx reverse proxy
   nginx:
     image: nginx:alpine
-    ports:
-      - "80:80"
     networks:
       - dokploy-network
     volumes:
