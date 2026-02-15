@@ -59,11 +59,11 @@ docker-compose -f docker-compose.prod.yml up -d
 
 ### 1. Get API Key
 ```bash
-POST /api/get-key
+POST /api/generate-key
 Content-Type: application/json
 
 {
-  "android_id": "your-android-id"
+  "phone_identifier": "your-android-id"
 }
 ```
 

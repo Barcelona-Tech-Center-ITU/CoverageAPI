@@ -1,3 +1,4 @@
+from datetime import datetime
 from fastapi import FastAPI, HTTPException, Depends
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -56,10 +57,33 @@ async def send_coverage_data(request: SendDataRequest, db: Session = Depends(get
     Validates API key against stored keys before accepting data.
     """
     try:
+        logger.info(
+            f"Received send-data request: "
+            f"api_key={request.api_key[:8]}..., "
+            f"lat={request.latitude}, lon={request.longitude}, "
+            f"gps_accuracy={request.gps_accuracy}, "
+            f"signal_dbm={request.signal_strength_dbm}, signal_asu={request.signal_strength_asu}, "
+            f"network_type={request.network_type}, data_network_type={request.data_network_type}, "
+            f"mcc={request.mobile_country_code}, mnc={request.network_code}, cell_id={request.cell_id}, "
+            f"app={request.app_name} v{request.app_version}, lib_v={request.library_version}, "
+            f"download={request.download_speed}, upload={request.upload_speed}, "
+            f"timestamp={request.timestamp}"
+        )
+
         if not request.api_key:
             raise HTTPException(status_code=400, detail="API key is required")
 
         phone_identifier = await validate_api_key(request.api_key, db)
+
+        # Parse timestamp string to datetime if provided
+        parsed_timestamp = None
+        if request.timestamp:
+            try:
+                parsed_timestamp = datetime.fromisoformat(request.timestamp)
+            except (ValueError, TypeError):
+                logger.warning(f"Invalid timestamp format: {request.timestamp}, using server time")
+                parsed_timestamp = None
+
         measurement = CoverageMeasurement(
             api_key=request.api_key,
             phone_identifier=phone_identifier,
@@ -78,7 +102,7 @@ async def send_coverage_data(request: SendDataRequest, db: Session = Depends(get
             library_version=request.library_version,
             download_speed_kbps=request.download_speed,
             upload_speed_kbps=request.upload_speed,
-            timestamp=request.timestamp
+            timestamp=parsed_timestamp
         )
 
         db.add(measurement)
@@ -93,6 +117,8 @@ async def send_coverage_data(request: SendDataRequest, db: Session = Depends(get
             message="Coverage data stored successfully"
         )
 
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error storing coverage data: {e}")
         db.rollback()
