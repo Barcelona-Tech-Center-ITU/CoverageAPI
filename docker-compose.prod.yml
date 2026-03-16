@@ -70,6 +70,7 @@ services:
     build: ./upload-service
     environment:
       - PYTHONUNBUFFERED=1
+      - DATABASE_URL=${DATABASE_URL}
       - ENV=production
     deploy:
       replicas: 2
@@ -81,6 +82,8 @@ services:
           memory: 1G
           cpus: '0.5'
     restart: unless-stopped
+    depends_on:
+      - postgres
 
 volumes:
   postgres_data:
